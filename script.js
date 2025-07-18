@@ -1,6 +1,7 @@
- // Initialize Supabase with environment variables
+// Initialize Supabase with environment variables
         const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
         const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const VITE_VARIABLE_NAME = import.meta.env.VITE_VARIABLE_NAME;
         
         // Check if credentials are set
         if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -208,5 +209,17 @@
         document.getElementById('password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 signIn();
+            }
+        });
+        
+        // Password show/hide toggle
+        document.getElementById('toggle-password').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                this.textContent = 'Hide';
+            } else {
+                passwordInput.type = 'password';
+                this.textContent = 'Show';
             }
         });

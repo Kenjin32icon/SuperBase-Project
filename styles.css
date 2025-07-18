@@ -148,6 +148,25 @@ button:disabled {
     background: #38a169;
 }
 
+.btn-show-password {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 13px;
+    margin-top: 6px;
+    margin-bottom: 0;
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: block;
+}
+
+.btn-show-password:hover {
+    background: #cbd5e1;
+}
+
 .hidden {
     display: none;
 }

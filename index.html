@@ -15,13 +15,17 @@
         <!-- Authentication Section -->
         <div id="auth-section" class="auth-section">
             <div id="auth-choice">
-                <button id="show-signup" class="btn-auth-choice">Sign Up</button>
-                <button id="show-login" class="btn-auth-choice">Login</button>
+                <button id="show-signup" class="btn-auth-choice" type="button">Sign Up</button>
+                <button id="show-login" class="btn-auth-choice" type="button">Login</button>
             </div>
             <form id="signup-form" class="hidden">
                 <div class="form-group">
                     <label for="signup-email">Email:</label>
                     <input type="email" id="signup-email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="signup-username">Username:</label>
+                    <input type="text" id="signup-username" placeholder="Choose a username">
                 </div>
                 <div class="form-group">
                     <label for="signup-password">Password:</label>
@@ -47,8 +51,32 @@
         <!-- User Section -->
         <div id="user-section" class="hidden">
             <div class="user-info">
-                <p>Welcome, <span id="user-email"></span>!</p>
+                <p>Welcome, <span id="user-username"></span> (<span id="user-email"></span>)!</p>
                 <button onclick="signOut()" style="margin-top: 10px;">Sign Out</button>
+            </div>
+
+            <!-- Profile Management Section -->
+            <div class="profile-section">
+                <h3>Your Profile</h3>
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="profile-username">Username:</label>
+                        <input type="text" id="profile-username" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-email">Email:</label>
+                        <input type="email" id="profile-email" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-fullname">Full Name:</label>
+                        <input type="text" id="profile-fullname" placeholder="Your full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-avatar-url">Avatar URL:</label>
+                        <input type="text" id="profile-avatar-url" placeholder="URL to your avatar">
+                    </div>
+                    <button type="button" onclick="updateProfile()">Update Profile</button>
+                </form>
             </div>
             
             <!-- Todo Section -->

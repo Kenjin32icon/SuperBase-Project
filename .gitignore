@@ -2,3 +2,10 @@
 # This file specifies intentionally untracked files to ignore in the repository.    
 Thought process.md
 Password.md
+# .gitignore
+.env
+.env.local
+.env.production
+.env.development
+node_modules/
+dist/

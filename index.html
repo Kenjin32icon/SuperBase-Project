@@ -14,17 +14,34 @@
         
         <!-- Authentication Section -->
         <div id="auth-section" class="auth-section">
-            <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" id="email" placeholder="Enter your email">
+            <div id="auth-choice">
+                <button id="show-signup" class="btn-auth-choice">Sign Up</button>
+                <button id="show-login" class="btn-auth-choice">Login</button>
             </div>
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" placeholder="Enter your password">
-                <button type="button" id="toggle-password" class="btn-show-password">Show Password</button>
-            </div>
-            <button onclick="signUp()">Sign Up</button>
-            <button onclick="signIn()">Sign In</button>
+            <form id="signup-form" class="hidden">
+                <div class="form-group">
+                    <label for="signup-email">Email:</label>
+                    <input type="email" id="signup-email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password:</label>
+                    <input type="password" id="signup-password" placeholder="Enter your password">
+                    <button type="button" id="toggle-signup-password" class="btn-show-password" onclick="togglePassword('signup-password', 'toggle-signup-password')">Show Password</button>
+                </div>
+                <button type="button" onclick="signUp()">Sign Up</button>
+            </form>
+            <form id="login-form" class="hidden">
+                <div class="form-group">
+                    <label for="login-email">Email:</label>
+                    <input type="email" id="login-email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password" placeholder="Enter your password">
+                    <button type="button" id="toggle-login-password" class="btn-show-password" onclick="togglePassword('login-password', 'toggle-login-password')">Show Password</button>
+                </div>
+                <button type="button" onclick="signIn()">Login</button>
+            </form>
         </div>
         
         <!-- User Section -->

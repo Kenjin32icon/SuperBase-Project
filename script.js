@@ -35,12 +35,24 @@
                     showAuthSection();
                 }
             });
+            
+            // Test: Try to fetch from todos table
+            try {
+                const { data, error } = await supabase.from('todos').select('*').limit(1);
+                if (error) {
+                    showStatus('Supabase connection error: ' + error.message, 'error');
+                } else {
+                    showStatus('Supabase connection successful!', 'success');
+                }
+            } catch (err) {
+                showStatus('Supabase JS error: ' + err.message, 'error');
+            }
         });
         
         // Authentication functions
         async function signUp() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
             
             if (!email || !password) {
                 showStatus('Please fill in all fields', 'error');
@@ -60,8 +72,8 @@
         }
         
         async function signIn() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
             
             if (!email || !password) {
                 showStatus('Please fill in all fields', 'error');
@@ -206,20 +218,37 @@
             }
         });
         
-        document.getElementById('password').addEventListener('keypress', function(e) {
+        document.getElementById('login-password').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 signIn();
             }
         });
         
-        // Password show/hide toggle
-        document.getElementById('toggle-password').addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                this.textContent = 'Hide';
-            } else {
-                passwordInput.type = 'password';
-                this.textContent = 'Show';
+        document.getElementById('signup-password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                signUp();
             }
         });
+        
+        // Show/hide auth forms
+        document.getElementById('show-signup').addEventListener('click', function() {
+            document.getElementById('signup-form').classList.remove('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+        });
+        document.getElementById('show-login').addEventListener('click', function() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('signup-form').classList.add('hidden');
+        });
+        
+        // Updated password toggle for both forms
+        function togglePassword(inputId, btnId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleBtn = document.getElementById(btnId);
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.textContent = 'Hide Password';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.textContent = 'Show Password';
+            }
+        }

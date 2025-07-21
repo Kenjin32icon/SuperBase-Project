@@ -1,10 +1,17 @@
 // Initialize Supabase with environment variables
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// In a real project, these would be loaded from a .env file
+// For this example, we'll assume they are available globally or set directly for demonstration.
+// const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+// const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// Placeholder for demonstration. Replace with your actual Supabase URL and Anon Key.
+const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // e.g., 'https://abcdefg.supabase.co'
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // e.g., 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+
 
 // Check if credentials are set
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    showStatus('Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file', 'error');
+if (SUPABASE_URL === 'YOUR_SUPABASE_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
+    showStatus('Please replace YOUR_SUPABASE_URL and YOUR_SUPABASE_ANON_KEY in script.js with your actual Supabase credentials.', 'error');
 }
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -13,6 +20,54 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 let userProfile = null; // To store user profile data
 let todos = [];
+
+// DOM Element References (for better maintainability)
+const elements = {
+    statusDiv: document.getElementById('status'),
+    authSection: document.getElementById('auth-section'),
+    userSection: document.getElementById('user-section'),
+    signupEmail: document.getElementById('signup-email'),
+    signupUsername: document.getElementById('signup-username'),
+    signupPassword: document.getElementById('signup-password'),
+    loginEmail: document.getElementById('login-email'),
+    loginPassword: document.getElementById('login-password'),
+    userEmailSpan: document.getElementById('user-email'),
+    userUsernameSpan: document.getElementById('user-username'),
+    profileUsername: document.getElementById('profile-username'),
+    profileEmail: document.getElementById('profile-email'),
+    profileFullname: document.getElementById('profile-fullname'),
+    profileAvatarUrl: document.getElementById('profile-avatar-url'),
+    newTodoInput: document.getElementById('new-todo'),
+    todosListDiv: document.getElementById('todos-list'),
+    signupButton: document.querySelector('#signup-form button[type="button"]:not(.btn-secondary)'), // Exclude the 'Back' button
+    loginButton: document.querySelector('#login-form button[type="button"]:not(.btn-secondary)'),   // Exclude the 'Back' button
+    updateProfileButton: document.querySelector('#profile-form button[type="button"]'),
+    addTodoButton: document.querySelector('.todo-section button'),
+    authChoiceDiv: document.getElementById('auth-choice'),
+    signupForm: document.getElementById('signup-form'),
+    loginForm: document.getElementById('login-form'),
+};
+
+// Helper to manage button loading state
+const originalButtonTexts = new Map(); // To store original button texts
+
+function setButtonLoading(buttonElement, isLoading, loadingText = 'Loading...') {
+    if (!buttonElement) return;
+
+    if (!originalButtonTexts.has(buttonElement)) {
+        originalButtonTexts.set(buttonElement, buttonElement.innerHTML);
+    }
+
+    if (isLoading) {
+        buttonElement.disabled = true;
+        buttonElement.classList.add('loading');
+        buttonElement.innerHTML = `<span class="loading-spinner"></span> ${loadingText}`;
+    } else {
+        buttonElement.disabled = false;
+        buttonElement.classList.remove('loading');
+        buttonElement.innerHTML = originalButtonTexts.get(buttonElement);
+    }
+}
 
 // Initialize app
 window.addEventListener('load', async () => {
@@ -23,6 +78,8 @@ window.addEventListener('load', async () => {
         await fetchUserProfile(); // Fetch profile after session is established
         showUserSection();
         loadTodos();
+    } else {
+        showAuthSection(); // Ensure auth section is shown if no session
     }
     
     // Listen for auth changes
@@ -35,14 +92,18 @@ window.addEventListener('load', async () => {
         } else if (event === 'SIGNED_OUT') {
             currentUser = null;
             userProfile = null; // Clear profile on sign-out
+            todos = []; // Clear todos on sign-out
             showAuthSection();
         }
     });
     
     // Test: Try to fetch from todos table to confirm Supabase connection
+    // This is a basic check and might not catch all configuration issues.
     try {
         const { data, error } = await supabase.from('todos').select('*').limit(1);
-        if (error) {
+        if (error && error.message.includes('permission denied')) {
+            showStatus('Supabase connection successful, but check your RLS policies for "todos" table.', 'warning');
+        } else if (error) {
             showStatus('Supabase connection error: ' + error.message, 'error');
         } else {
             showStatus('Supabase connection successful!', 'success');
@@ -54,23 +115,32 @@ window.addEventListener('load', async () => {
 
 // Authentication functions
 async function signUp() {
-    const email = document.getElementById('signup-email').value;
-    const username = document.getElementById('signup-username').value;
-    const password = document.getElementById('signup-password').value;
+    const email = elements.signupEmail.value.trim();
+    const username = elements.signupUsername.value.trim();
+    const password = elements.signupPassword.value;
     
     if (!email || !username || !password) {
         showStatus('Please fill in all fields', 'error');
         return;
     }
 
+    if (password.length < 6) {
+        showStatus('Password must be at least 6 characters long.', 'error');
+        return;
+    }
+
+    setButtonLoading(elements.signupButton, true, 'Signing Up...');
+
     // First, sign up the user with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email,
         password: password,
+        // options: { emailRedirectTo: 'YOUR_LOGIN_PAGE_URL' } // Optional: redirect after email confirmation
     });
     
     if (authError) {
         showStatus(authError.message, 'error');
+        setButtonLoading(elements.signupButton, false);
         return;
     }
 
@@ -83,27 +153,36 @@ async function signUp() {
             ]);
 
         if (profileError) {
-            // If profile creation fails, you might want to consider deleting the auth user
-            // or logging this error for manual intervention.
             showStatus('Sign up successful, but profile creation failed: ' + profileError.message, 'error');
-            // Optional: await supabase.auth.admin.deleteUser(authData.user.id);
         } else {
-            showStatus('Sign up successful! Check your email for verification link.', 'success');
-            // Automatically sign in the user after successful sign-up and profile creation
-            // This might be handled by the onAuthStateChange listener if auto-login is enabled
-            // or you might want to prompt them to log in.
+            showStatus('Sign up successful! Please check your email for a verification link, then log in.', 'success');
+            // Switch to login form after successful signup and pre-fill email
+            elements.signupForm.classList.add('hidden');
+            elements.loginForm.classList.remove('hidden');
+            elements.authChoiceDiv.classList.add('hidden'); // Keep choice buttons hidden
+            elements.loginEmail.value = email; // Pre-fill login email
         }
+    } else {
+        // This branch handles cases where authData.user is null but no authError (e.g., email already registered)
+        showStatus('Sign up initiated. Please check your email for verification.', 'success');
+        elements.signupForm.classList.add('hidden');
+        elements.loginForm.classList.remove('hidden');
+        elements.authChoiceDiv.classList.add('hidden'); // Keep choice buttons hidden
+        elements.loginEmail.value = email; // Pre-fill login email
     }
+    setButtonLoading(elements.signupButton, false);
 }
 
 async function signIn() {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+    const email = elements.loginEmail.value.trim();
+    const password = elements.loginPassword.value;
     
     if (!email || !password) {
         showStatus('Please fill in all fields', 'error');
         return;
     }
+
+    setButtonLoading(elements.loginButton, true, 'Logging In...');
     
     const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
@@ -114,8 +193,16 @@ async function signIn() {
         showStatus(error.message, 'error');
     } else {
         showStatus('Signed in successfully!', 'success');
+        // Update last_login timestamp in profiles table
+        if (data.user) {
+            await supabase
+                .from('profiles')
+                .update({ last_login: new Date().toISOString() })
+                .eq('user_id', data.user.id);
+        }
         // The onAuthStateChange listener will handle showing the user section and loading todos/profile
     }
+    setButtonLoading(elements.loginButton, false);
 }
 
 async function signOut() {
@@ -155,14 +242,16 @@ async function updateProfile() {
         return;
     }
 
-    const fullName = document.getElementById('profile-fullname').value.trim();
-    const avatarUrl = document.getElementById('profile-avatar-url').value.trim();
+    const fullName = elements.profileFullname.value.trim();
+    const avatarUrl = elements.profileAvatarUrl.value.trim();
 
     const updates = {
         full_name: fullName,
         avatar_url: avatarUrl,
         last_login: new Date().toISOString() // Update last login on profile update
     };
+
+    setButtonLoading(elements.updateProfileButton, true, 'Updating...');
 
     const { error } = await supabase
         .from('profiles')
@@ -175,20 +264,21 @@ async function updateProfile() {
         showStatus('Profile updated successfully!', 'success');
         await fetchUserProfile(); // Re-fetch to ensure UI is up-to-date
     }
+    setButtonLoading(elements.updateProfileButton, false);
 }
 
 function updateProfileForm() {
     if (userProfile) {
-        document.getElementById('profile-username').value = userProfile.username || '';
-        document.getElementById('profile-email').value = userProfile.email || '';
-        document.getElementById('profile-fullname').value = userProfile.full_name || '';
-        document.getElementById('profile-avatar-url').value = userProfile.avatar_url || '';
+        elements.profileUsername.value = userProfile.username || '';
+        elements.profileEmail.value = userProfile.email || '';
+        elements.profileFullname.value = userProfile.full_name || '';
+        elements.profileAvatarUrl.value = userProfile.avatar_url || '';
     }
 }
 
-// Todo functions (remain largely the same, but ensure user_id is correctly passed)
+// Todo functions
 async function addTodo() {
-    const todoText = document.getElementById('new-todo').value.trim();
+    const todoText = elements.newTodoInput.value.trim();
     
     if (!todoText) {
         showStatus('Please enter a todo', 'error');
@@ -200,6 +290,8 @@ async function addTodo() {
         return;
     }
 
+    setButtonLoading(elements.addTodoButton, true, 'Adding...');
+
     const { data, error } = await supabase
         .from('todos')
         .insert([
@@ -210,10 +302,11 @@ async function addTodo() {
     if (error) {
         showStatus(error.message, 'error');
     } else {
-        document.getElementById('new-todo').value = '';
+        elements.newTodoInput.value = '';
         loadTodos();
         showStatus('Todo added!', 'success');
     }
+    setButtonLoading(elements.addTodoButton, false);
 }
 
 async function loadTodos() {
@@ -238,6 +331,7 @@ async function loadTodos() {
 }
 
 async function toggleTodo(id, completed) {
+    // No loading spinner for individual todo items, as it's a quick action
     const { error } = await supabase
         .from('todos')
         .update({ completed: !completed })
@@ -252,6 +346,7 @@ async function toggleTodo(id, completed) {
 }
 
 async function deleteTodo(id) {
+    // No loading spinner for individual todo items, as it's a quick action
     const { error } = await supabase
         .from('todos')
         .delete()
@@ -268,35 +363,43 @@ async function deleteTodo(id) {
 
 // UI functions
 function showStatus(message, type) {
-    const statusDiv = document.getElementById('status');
-    statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+    elements.statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
     setTimeout(() => {
-        statusDiv.innerHTML = '';
+        elements.statusDiv.innerHTML = '';
     }, 5000);
 }
 
 function showAuthSection() {
-    document.getElementById('auth-section').classList.remove('hidden');
-    document.getElementById('user-section').classList.add('hidden');
+    elements.authSection.classList.remove('hidden');
+    elements.userSection.classList.add('hidden');
+    elements.authChoiceDiv.classList.remove('hidden'); // Show choice buttons
+    elements.signupForm.classList.add('hidden'); // Hide forms
+    elements.loginForm.classList.add('hidden'); // Hide forms
+    // Clear form fields when returning to auth section
+    elements.signupEmail.value = '';
+    elements.signupUsername.value = '';
+    elements.signupPassword.value = '';
+    elements.loginEmail.value = '';
+    elements.loginPassword.value = '';
+    showStatus('', ''); // Clear any previous status messages
 }
 
 function showUserSection() {
-    document.getElementById('auth-section').classList.add('hidden');
-    document.getElementById('user-section').classList.remove('hidden');
+    elements.authSection.classList.add('hidden');
+    elements.userSection.classList.remove('hidden');
     
     // Update user info display
-    document.getElementById('user-email').textContent = currentUser.email;
-    document.getElementById('user-username').textContent = userProfile ? userProfile.username : 'Guest';
+    elements.userEmailSpan.textContent = currentUser.email;
+    elements.userUsernameSpan.textContent = userProfile && userProfile.username ? userProfile.username : currentUser.email.split('@')[0];
 
     updateProfileForm(); // Populate profile form when user section is shown
 }
 
 function renderTodos() {
-    const todosList = document.getElementById('todos-list');
-    todosList.innerHTML = '';
+    elements.todosListDiv.innerHTML = '';
     
     if (todos.length === 0) {
-        todosList.innerHTML = '<p>No todos yet! Add one above.</p>';
+        elements.todosListDiv.innerHTML = '<p>No todos yet! Add one above.</p>';
         return;
     }
 
@@ -316,24 +419,39 @@ function renderTodos() {
             </div>
         `;
         
-        todosList.appendChild(todoItem);
+        elements.todosListDiv.appendChild(todoItem);
     });
 }
 
+// Function to show the initial auth choice screen
+function showAuthChoice() {
+    elements.authChoiceDiv.classList.remove('hidden');
+    elements.signupForm.classList.add('hidden');
+    elements.loginForm.classList.add('hidden');
+    // Clear form fields when going back
+    elements.signupEmail.value = '';
+    elements.signupUsername.value = '';
+    elements.signupPassword.value = '';
+    elements.loginEmail.value = '';
+    elements.loginPassword.value = '';
+    showStatus('', ''); // Clear any previous status messages
+}
+
+
 // Enter key support
-document.getElementById('new-todo').addEventListener('keypress', function(e) {
+elements.newTodoInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         addTodo();
     }
 });
 
-document.getElementById('login-password').addEventListener('keypress', function(e) {
+elements.loginPassword.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         signIn();
     }
 });
 
-document.getElementById('signup-password').addEventListener('keypress', function(e) {
+elements.signupPassword.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         signUp();
     }
@@ -341,14 +459,16 @@ document.getElementById('signup-password').addEventListener('keypress', function
 
 window.addEventListener('DOMContentLoaded', function() {
     document.getElementById('show-signup').addEventListener('click', function() {
-        document.getElementById('signup-form').classList.remove('hidden');
-        document.getElementById('login-form').classList.add('hidden');
-        document.getElementById('auth-choice').classList.add('hidden'); // Hide choice buttons
+        elements.signupForm.classList.remove('hidden');
+        elements.loginForm.classList.add('hidden');
+        elements.authChoiceDiv.classList.add('hidden'); // Hide choice buttons
+        showStatus('', ''); // Clear any previous status messages
     });
     document.getElementById('show-login').addEventListener('click', function() {
-        document.getElementById('login-form').classList.remove('hidden');
-        document.getElementById('signup-form').classList.add('hidden');
-        document.getElementById('auth-choice').classList.add('hidden'); // Hide choice buttons
+        elements.loginForm.classList.remove('hidden');
+        elements.signupForm.classList.add('hidden');
+        elements.authChoiceDiv.classList.add('hidden'); // Hide choice buttons
+        showStatus('', ''); // Clear any previous status messages
     });
 });
 

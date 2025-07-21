@@ -21,30 +21,32 @@
             <form id="signup-form" class="hidden">
                 <div class="form-group">
                     <label for="signup-email">Email:</label>
-                    <input type="email" id="signup-email" placeholder="Enter your email">
+                    <input type="email" id="signup-email" placeholder="Enter your email" required>
                 </div>
                 <div class="form-group">
                     <label for="signup-username">Username:</label>
-                    <input type="text" id="signup-username" placeholder="Choose a username">
+                    <input type="text" id="signup-username" placeholder="Choose a username" required>
                 </div>
                 <div class="form-group">
                     <label for="signup-password">Password:</label>
-                    <input type="password" id="signup-password" placeholder="Enter your password">
+                    <input type="password" id="signup-password" placeholder="Enter your password" required minlength="6">
                     <button type="button" id="toggle-signup-password" class="btn-show-password" onclick="togglePassword('signup-password', 'toggle-signup-password')">Show Password</button>
                 </div>
                 <button type="button" onclick="signUp()">Sign Up</button>
+                <button type="button" class="btn-secondary" onclick="showAuthChoice()">Back</button>
             </form>
             <form id="login-form" class="hidden">
                 <div class="form-group">
                     <label for="login-email">Email:</label>
-                    <input type="email" id="login-email" placeholder="Enter your email">
+                    <input type="email" id="login-email" placeholder="Enter your email" required>
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password:</label>
-                    <input type="password" id="login-password" placeholder="Enter your password">
+                    <input type="password" id="login-password" placeholder="Enter your password" required>
                     <button type="button" id="toggle-login-password" class="btn-show-password" onclick="togglePassword('login-password', 'toggle-login-password')">Show Password</button>
                 </div>
                 <button type="button" onclick="signIn()">Login</button>
+                <button type="button" class="btn-secondary" onclick="showAuthChoice()">Back</button>
             </form>
         </div>
         
@@ -91,8 +93,14 @@
         </div>
     </div>
 
-    <!-- Supabase JS -->
+ <!-- Supabase JS - Fixed package name 
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
+
+    <script src="script.js"></script>-->
+    
+    <!-- Supabase JS - Using ES Modules -->
+
+    <script type="module" src="script.js"></script>
 </body>
 </html>

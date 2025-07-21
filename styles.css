@@ -34,6 +34,17 @@ h1 {
     margin-bottom: 30px;
 }
 
+#auth-choice {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+#auth-choice button {
+    flex: 1; /* Make buttons take equal width */
+    margin-bottom: 0; /* Remove default button margin */
+}
+
 .form-group {
     margin-bottom: 20px;
 }
@@ -71,6 +82,9 @@ button {
     cursor: pointer;
     transition: transform 0.2s;
     margin-bottom: 10px;
+    display: flex; /* Added for spinner alignment */
+    align-items: center; /* Added for spinner alignment */
+    justify-content: center; /* Added for spinner alignment */
 }
 
 button:hover {
@@ -81,6 +95,15 @@ button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
+}
+
+.btn-secondary {
+    background: #6c757d; /* A neutral color for the back button */
+    margin-top: 5px; /* Small margin above it */
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
 }
 
 .status {
@@ -100,6 +123,12 @@ button:disabled {
     background: #fed7d7;
     color: #e53e3e;
     border: 1px solid #feb2b2;
+}
+
+.warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
 }
 
 .user-info {
@@ -186,4 +215,25 @@ input:disabled {
     background-color: #e9ecef;
     cursor: not-allowed;
     color: #6c757d;
+}
+
+/* Loading Spinner Styles */
+.loading-spinner {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+    margin-right: 8px; /* Space between spinner and text */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+button.loading {
+    cursor: wait;
+    opacity: 0.8;
 }
